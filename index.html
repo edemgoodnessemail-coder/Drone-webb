@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ultimate Drone Photo Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#E4EDF2; --panel:#F6FAFC; --ink:#12263A; --muted:#566B7D;
+  --line:#BFD0DB; --cobalt:#1F4FD8; --sodium:#F2A900;
+  --display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
+  --body:"Newsreader",Georgia,"Times New Roman",serif;
+}
+:root[data-theme="dark"]{
+  --sky:#0E1B27; --panel:#152738; --ink:#E6EEF4; --muted:#8FA5B6;
+  --line:#2A4156; --cobalt:#7FA0FF; --sodium:#F2B93B;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--sky);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;transition:background .2s,color .2s}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cobalt);outline-offset:2px}
+
+/* Header & Navigation */
+.top{position:sticky;top:0;z-index:5;background:var(--sky);border-bottom:1px solid var(--line)}
+.bar{max-width:1600px;margin:0 auto;padding:16px clamp(14px,3vw,36px);display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.02em;line-height:1;margin-right:auto}
+.brand small{display:block;font-family:var(--body);font-weight:400;font-style:italic;font-size:14px;color:var(--muted);margin-top:4px;letter-spacing:0}
+.search{width:240px;max-width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);font:inherit;font-size:15px}
+.search::placeholder{color:var(--muted)}
+.ghost{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 14px;font-family:var(--display);font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px}
+.ghost:hover{border-color:var(--cobalt)}
+.switch-row{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;font-size:14px}
+.switch{position:relative;width:52px;height:28px;border-radius:999px;border:1px solid var(--line);background:var(--panel);padding:0;transition:background .2s,border-color .2s}
+.switch .knob{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;transition:transform .2s}
+.switch .knob svg{width:13px;height:13px;stroke:var(--sky);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.switch[aria-checked="true"]{background:var(--cobalt);border-color:var(--cobalt)}
+.switch[aria-checked="true"] .knob{transform:translateX(24px);background:#fff}
+.switch[aria-checked="true"] .knob svg{stroke:#12263A}
+.switch .sun{display:block}.switch .moon{display:none}
+.switch[aria-checked="true"] .sun{display:none}.switch[aria-checked="true"] .moon{display:block}
+
+/* Category Chips */
+.chips{max-width:1600px;margin:0 auto;padding:0 clamp(14px,3vw,36px) 12px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:thin}
+.chip{flex:none;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-family:var(--display);font-weight:600;font-size:14px;white-space:nowrap}
+.chip svg{width:24px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.chip .n{color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.chip:hover{border-color:var(--cobalt)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--sky);border-color:var(--ink)}
+.chip[aria-pressed="true"] .n{color:var(--sky);opacity:.7}
+
+/* Main Content Layout */
+main{max-width:1600px;margin:0 auto;padding:26px clamp(14px,3vw,36px) 70px}
+.intro h1{font-family:var(--display);font-weight:800;font-size:clamp(32px,5vw,58px);line-height:1;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{margin:0;max-width:68ch;color:var(--muted)}
+.stats{display:flex;gap:26px;flex-wrap:wrap;margin:18px 0 22px;font-family:var(--display);font-size:15px}
+.stats b{font-weight:800;font-size:22px;margin-right:6px;font-variant-numeric:tabular-nums}
+.stats span{color:var(--muted)}
+
+/* Masonry Gallery Grid */
+.gallery{column-width:260px;column-gap:14px}
+.tile{display:block;position:relative;width:100%;margin:0 0 14px;padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0a1620;break-inside:avoid;text-align:left}
+.tile img{display:block;width:100%;height:auto;background:#0a1620}
+.tile .cap{position:absolute;inset:auto 0 0 0;padding:28px 12px 10px;color:#fff;background:linear-gradient(transparent,rgba(5,12,20,.85));font-family:var(--display);font-weight:600;font-size:14px;line-height:1.25}
+.tile .cap small{display:block;font-weight:400;font-size:12px;opacity:.8;margin-top:2px}
+.tile:hover,.tile:focus-visible{border-color:var(--cobalt);box-shadow:0 0 0 2px var(--cobalt)}
+.sk{margin:0 0 14px;border-radius:8px;background:linear-gradient(90deg,var(--line),var(--panel),var(--line));background-size:200% 100%;animation:sh 1.4s linear infinite;break-inside:avoid}
+@keyframes sh{to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.sk{animation:none}.switch,.switch .knob,body{transition:none}}
+
+.more{display:flex;justify-content:center;margin-top:24px}
+.more .ghost{padding:12px 26px;font-size:16px}
+.state{padding:56px 16px;text-align:center;color:var(--muted);font-family:var(--display)}
+
+/* GitHub Instructions Banner */
+.gh-guide{margin-top:50px;padding:28px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.gh-guide h3{font-family:var(--display);margin-top:0;font-size:20px;color:var(--ink);display:flex;align-items:center;gap:8px}
+.gh-guide ol{margin:0;padding-left:20px;color:var(--muted);line-height:1.7}
+.gh-guide code{background:var(--sky);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px;color:var(--ink)}
+
+/* Modal Lightbox */
+dialog{border:0;padding:0;background:transparent;width:min(96vw,1300px);max-width:none;color:#fff}
+dialog::backdrop{background:rgba(5,12,20,.92)}
+.lb{display:flex;flex-direction:column;align-items:center;gap:10px}
+.lb img{max-width:100%;max-height:78vh;border-radius:6px;display:block;background:#0a1620}
+.lb .meta{max-width:80ch;text-align:center;font-family:var(--display);font-size:14px;line-height:1.4}
+.lb .meta h2{font-size:18px;margin:0 0 4px}
+.lb .meta p{margin:0 0 4px;font-family:var(--body);font-size:15px;opacity:.85}
+.lb .meta a{color:#9db8ff}
+.nav{position:fixed;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:0;background:rgba(246,250,252,.92);color:#12263A;font-size:22px;line-height:1}
+.nav.prev{left:14px}.nav.next{right:14px}
+.x{position:fixed;top:14px;right:14px;background:rgba(246,250,252,.92);color:#12263A;border:0;border-radius:6px;padding:8px 14px;font-family:var(--display);font-weight:600}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="bar">
+    <div class="brand">Drone Photo Gallery<small>Photos of every category of drone & unmanned systems from Wikimedia Commons</small></div>
+    <input class="search" id="search" type="search" placeholder="Search photos…" aria-label="Search loaded photos">
+    <button class="ghost" id="shuffle" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+      Shuffle
+    </button>
+    <div class="switch-row">
+      <span id="themeLabel">Dark mode</span>
+      <button class="switch" id="theme" type="button" role="switch" aria-checked="false" aria-labelledby="themeLabel">
+        <span class="knob">
+          <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg>
+        </span>
+      </button>
+    </div>
+  </div>
+  <nav class="chips" id="chips" aria-label="Drone categories"></nav>
+</header>
+
+<main>
+  <section class="intro">
+    <h1 id="title">All drones</h1>
+    <p id="blurb"></p>
+  </section>
+  <div class="stats" id="stats"></div>
+  <section id="view" aria-live="polite"></section>
+
+  <!-- GitHub Publishing Guide -->
+  <section class="gh-guide">
+    <h3>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      How to Push and Publish to GitHub Pages
+    </h3>
+    <ol>
+      <li>Save this single file as <code>index.html</code> in a new folder on your computer.</li>
+      <li>Open your terminal or command prompt inside that folder and initialize a Git repository: <br><code>git init && git add index.html && git commit -m "Initial commit: Drone Photo Gallery"</code></li>
+      <li>Create a new repository on <a href="https://github.com" target="_blank" rel="noopener">GitHub.com</a> (e.g., named <code>drone-gallery</code>).</li>
+      <li>Link your local repository and push your code: <br><code>git remote add origin https://github.com/YOUR-USERNAME/drone-gallery.git</code><br><code>git branch -M main</code><br><code>git push -u origin main</code></li>
+      <li>Go to your GitHub Repository settings &rarr; <strong>Pages</strong>, select the <code>main</code> branch as the source, and save! Your app will be live at <code>https://YOUR-USERNAME.github.io/drone-gallery/</code>.</li>
+    </ol>
+  </section>
+</main>
+
+<dialog id="lightbox" aria-label="Photo viewer">
+  <button class="x" id="close" type="button">Close</button>
+  <button class="nav prev" id="prev" type="button" aria-label="Previous photo">&#8249;</button>
+  <button class="nav next" id="next" type="button" aria-label="Next photo">&#8250;</button>
+  <div class="lb">
+    <img id="lbimg" alt="" referrerpolicy="no-referrer">
+    <div class="meta" id="lbmeta"></div>
+  </div>
+</dialog>
+
+<script>
+/* Comprehensive Drone Categories with tailored Wikimedia Commons search queries */
+const CATS = {
+  predator: { label:"Predator & Military", blurb:"Long-endurance military aircraft flown remotely, built for surveillance and precision strike.",
+    q:'("MQ-9 Reaper" OR "MQ-1 Predator" OR "RQ-4 Global Hawk" OR "Bayraktar TB2")',
+    icon:'<path d="M2 12h8l4-7 2 0-2 7 8 2-8 2 2 7-2 0-4-7H2z"/>' },
+  fighter: { label:"Jet fighter drones", blurb:"Fast, jet-powered uncrewed combat aircraft and loyal wingmen built to fly beside piloted fighters.",
+    q:'("XQ-58 Valkyrie" OR "X-47B" OR "Ghost Bat" OR "Taranis" OR "nEUROn")',
+    icon:'<path d="M17 1l3 8 12 8v2l-12-3-1 4h-4l-1-4L2 19v-2l12-8z"/>' },
+  quad: { label:"Quadcopters", blurb:"Four rotors, simple controls and steady hovering. The shape most people picture for a drone.",
+    q:'(quadcopter OR "DJI Phantom" OR "DJI Mavic" OR "Autel Evo")',
+    icon:'<circle cx="6" cy="5" r="3"/><circle cx="18" cy="5" r="3"/><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M8 7l4 3m6-3l-4 3m-4 4l4 3m6-3l-4 3"/><rect x="9" y="8" width="6" height="6" rx="1"/>' },
+  multi: { label:"Multi-rotor drones", blurb:"Six, eight or more rotors for extra lift and redundancy, carrying film cameras and heavy sensors.",
+    q:'(hexacopter OR octocopter OR multirotor)',
+    icon:'<circle cx="5" cy="11" r="2.5"/><circle cx="10" cy="4" r="2.5"/><circle cx="18" cy="4" r="2.5"/><circle cx="23" cy="11" r="2.5"/><circle cx="10" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><rect x="10" y="8" width="4" height="6" rx="1"/>' },
+  racing: { label:"Racing and FPV", blurb:"Small, very fast quadcopters flown through a live video headset.",
+    q:'("FPV drone" OR "racing drone" OR "drone racing")',
+    icon:'<circle cx="6" cy="6" r="3"/><circle cx="22" cy="6" r="3"/><path d="M8 8l4 4m6-4l-4 4"/><path d="M10 13h4v5h-4z"/>' },
+  delivery: { label:"Delivery & Agri", blurb:"Working drones that carry parcels, spray crops and survey fields.",
+    q:'("delivery drone" OR "agricultural drone" OR "spraying drone" OR "Amazon Prime Air")',
+    icon:'<circle cx="7" cy="4" r="2.5"/><circle cx="21" cy="4" r="2.5"/><path d="M8 6l4 3m4-3l-4 3"/><rect x="10" y="10" width="8" height="8" rx="1"/>' },
+  swarm: { label:"Micro and swarm", blurb:"Palm-sized drones, and fleets that fly together in light shows.",
+    q:'("drone light show" OR "Black Hornet" OR "micro air vehicle" OR "nano drone")',
+    icon:'<circle cx="5" cy="6" r="2"/><circle cx="14" cy="4" r="2"/><circle cx="23" cy="7" r="2"/><circle cx="8" cy="15" r="2"/><circle cx="18" cy="15" r="2"/>' },
+  loitering: { label:"Loitering munitions", blurb:"Expendable drones that circle an area and dive onto a target.",
+    q:'("Switchblade drone" OR "Shahed 136" OR "IAI Harop" OR "loitering munition")',
+    icon:'<path d="M2 11l10-3 14 3-14 3z"/><path d="M10 8L6 2m4 16l-4-5"/>' },
+  solar: { label:"Solar high-flyers", blurb:"Long, light, solar-covered wings that cruise at the edge of space for weeks.",
+    q:'("Airbus Zephyr" OR "Helios Prototype" OR "Solar Impulse" OR "high-altitude pseudo-satellite")',
+    icon:'<path d="M1 10h26M14 10v4"/><rect x="11" y="14" width="6" height="4" rx="1"/>' },
+  space: { label:"Space drones & copters", blurb:"Free-flying robots and uncrewed craft working in orbit and on Mars.",
+    q:'(Astrobee OR "Int-Ball" OR "Ingenuity helicopter" OR "X-37B")',
+    icon:'<circle cx="14" cy="11" r="4"/><path d="M10 11H2m24 0h-8M14 7V2m0 18v-5"/><path d="M3 4l4 3m14-3l-4 3M3 18l4-3m14 3l-4-3"/>' },
+  probe: { label:"Space probes", blurb:"Uncrewed spacecraft sent to study planets, moons, the Sun and interstellar space.",
+    q:'("Voyager 1" OR "New Horizons" OR "Parker Solar Probe" OR "Juno spacecraft" OR "Cassini spacecraft")',
+    icon:'<path d="M3 3c0 6 4 10 10 10z"/><path d="M8 8l7 5"/><rect x="14" y="11" width="7" height="5"/><path d="M21 13.5h7"/>' },
+  underwater: { label:"Underwater drones", blurb:"Robot submersibles that map the sea floor, inspect pipelines and explore the deep.",
+    q:'("underwater drone" OR "remotely operated vehicle" OR "autonomous underwater vehicle" OR "Bluefin-21")',
+    icon:'<ellipse cx="14" cy="11" rx="10" ry="4.5"/><path d="M24 11l5-3v6z"/><path d="M12 6.5V3h3"/>' },
+  surface: { label:"Sea surface boats", blurb:"Uncrewed boats and sailing drones that patrol and gather ocean data.",
+    q:'(Saildrone OR "Wave Glider" OR "unmanned surface vehicle")',
+    icon:'<path d="M3 13h22l-3 5H6z"/><path d="M14 13V2l6 11"/>' },
+  ground: { label:"Ground rovers & UGVs", blurb:"Wheeled, tracked and legged robots for bomb disposal, scouting and inspection.",
+    q:'("unmanned ground vehicle" OR PackBot OR "Spot robot" OR "Mars rover" OR "Curiosity rover")',
+    icon:'<rect x="6" y="5" width="16" height="7" rx="2"/><circle cx="7.5" cy="16" r="2.5"/><circle cx="14" cy="16" r="2.5"/><circle cx="20.5" cy="16" r="2.5"/>' }
+};
+const ALL_ICON = '<circle cx="7" cy="5" r="2.5"/><circle cx="21" cy="5" r="2.5"/><circle cx="7" cy="15" r="2.5"/><circle cx="21" cy="15" r="2.5"/>';
+const PAGE = 14;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const plain = html => { const d = document.createElement("div"); d.innerHTML = html || ""; return (d.textContent || "").replace(/\s+/g," ").trim(); };
+
+const data = {};
+Object.keys(CATS).forEach(k => data[k] = { items:[], seen:new Set(), offset:0, done:false, loading:false, failed:false });
+const state = { cat:"all", query:"", shuffled:false, view:[], current:0 };
+
+/* Fetch Wikimedia Commons API asynchronously */
+async function fetchPage(key){
+  const d = data[key];
+  if(d.loading || d.done) return;
+  d.loading = true; render();
+  const url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*" +
+    "&generator=search&gsrnamespace=6&gsrlimit=" + PAGE + "&gsroffset=" + d.offset +
+    "&gsrsearch=" + encodeURIComponent(CATS[key].q + " filetype:bitmap") +
+    "&prop=imageinfo&iiprop=url|mime|size|extmetadata&iiurlwidth=500" +
+    "&iiextmetadatafilter=ImageDescription|Artist|LicenseShortName|LicenseUrl";
+  try{
+    const r = await fetch(url);
+    if(!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    const pages = j.query && j.query.pages ? Object.values(j.query.pages).sort((a,b) => a.index - b.index) : [];
+    pages.forEach(p => {
+      const info = p.imageinfo && p.imageinfo[0];
+      if(!info || !/^image\/(jpeg|png)$/.test(info.mime) || info.width < 600 || !info.thumburl) return;
+      if(d.seen.has(p.pageid)) return;
+      d.seen.add(p.pageid);
+      const md = info.extmetadata || {};
+      const title = p.title.replace(/^File:/,"").replace(/\.[a-z]+$/i,"").replace(/_/g," ");
+      d.items.push({
+        key, id:p.pageid, title,
+        desc: plain(md.ImageDescription && md.ImageDescription.value).slice(0,260),
+        artist: plain(md.Artist && md.Artist.value).slice(0,80),
+        license: plain(md.LicenseShortName && md.LicenseShortName.value),
+        licenseUrl: md.LicenseUrl && md.LicenseUrl.value,
+        page: info.descriptionurl,
+        thumb: info.thumburl,
+        ratio: info.thumbwidth && info.thumbheight ? info.thumbwidth + "/" + info.thumbheight : "4/3",
+        big: info.width > 1280 ? info.thumburl.replace(/\/\d+px-/, "/1280px-") : info.url,
+        orig: info.url
+      });
+    });
+    if(j.continue && j.continue.gsroffset != null) d.offset = j.continue.gsroffset; else d.done = true;
+    d.failed = false;
+  }catch(e){ d.failed = true; d.done = d.items.length > 0; }
+  d.loading = false;
+  render(); updateChips();
+}
+
+/* Build visible items list */
+function buildView(){
+  let list;
+  if(state.cat === "all"){
+    const cols = Object.keys(CATS).map(k => data[k].items);
+    list = [];
+    for(let i = 0; cols.some(c => i < c.length); i++) cols.forEach(c => { if(c[i]) list.push(c[i]); });
+  } else list = data[state.cat].items.slice();
+  if(state.shuffled) list = list.map(x => [Math.random(), x]).sort((a,b) => a[0]-b[0]).map(x => x[1]);
+  const q = state.query.trim().toLowerCase();
+  if(q) list = list.filter(i => (i.title + " " + i.desc + " " + CATS[i.key].label).toLowerCase().includes(q));
+  return list;
+}
+
+/* Rendering functions */
+function renderChips(){
+  const total = Object.values(data).reduce((n,d) => n + d.items.length, 0);
+  const chip = (k,label,icon,n) => `<button class="chip" data-k="${k}" aria-pressed="${state.cat===k}">
+      <svg viewBox="0 0 28 22" aria-hidden="true">${icon}</svg><span>${label}</span><span class="n" id="n-${k}">${n||""}</span></button>`;
+  $("chips").innerHTML = chip("all","All drones",ALL_ICON,total) +
+    Object.entries(CATS).map(([k,c]) => chip(k,c.label,c.icon,data[k].items.length)).join("");
+  document.querySelectorAll(".chip").forEach(b => b.onclick = () => selectCat(b.dataset.k));
+}
+function updateChips(){
+  const total = Object.values(data).reduce((n,d) => n + d.items.length, 0);
+  $("n-all").textContent = total || "";
+  Object.keys(CATS).forEach(k => { const el = $("n-"+k); if(el) el.textContent = data[k].items.length || ""; });
+}
+
+function render(){
+  const isAll = state.cat === "all";
+  $("title").textContent = isAll ? "All drones" : CATS[state.cat].label;
+  $("blurb").textContent = isAll ? "A mixed gallery spanning military, aerial, marine, and ground unmanned systems. Pick a category above to focus, or press Shuffle." : CATS[state.cat].blurb;
+
+  const keys = isAll ? Object.keys(CATS) : [state.cat];
+  const loading = keys.some(k => data[k].loading);
+  const canMore = keys.some(k => !data[k].done);
+  const allFailed = keys.every(k => data[k].failed && !data[k].items.length);
+
+  state.view = buildView();
+  const catCount = new Set(state.view.map(i => i.key)).size;
+  $("stats").innerHTML = `<div><b>${state.view.length}</b><span>photos shown</span></div><div><b>${catCount}</b><span>${catCount===1?"category":"categories"}</span></div>`;
+
+  if(allFailed){
+    $("view").innerHTML = '<div class="state">Photos couldn’t be loaded. Check your internet connection and reload.</div>';
+    return;
+  }
+
+  let html = "";
+  if(state.view.length){
+    html += '<div class="gallery">' + state.view.map((it,i) => `
+      <button class="tile" data-i="${i}" aria-label="Open photo: ${esc(it.title)}">
+        <img loading="lazy" src="${it.thumb}" alt="${esc(it.desc || it.title)}" style="aspect-ratio:${it.ratio}" referrerpolicy="no-referrer">
+        <span class="cap">${esc(it.title.length>70 ? it.title.slice(0,67)+"…" : it.title)}<small>${esc(CATS[it.key].label)}</small></span>
+      </button>`).join("") + '</div>';
+  } else if(!loading){
+    html += '<div class="state">No photos match that search. Clear the search box to see everything.</div>';
+  }
+  if(loading && !state.view.length){
+    const hs = [220,300,180,260,320,200,240,280];
+    html += '<div class="gallery">' + hs.map(h => `<div class="sk" style="height:${h}px"></div>`).join("") + '</div>';
+  }
+  if(canMore && !(loading && !state.view.length)){
+    html += `<div class="more"><button class="ghost" id="more" type="button" ${loading?"disabled":""}>${loading?"Loading…":"Load more photos"}</button></div>`;
+  }
+  $("view").innerHTML = html;
+
+  document.querySelectorAll(".tile img").forEach(img => img.onerror = () => { img.closest(".tile").style.display = "none"; });
+  document.querySelectorAll(".tile").forEach(t => t.onclick = () => openLB(+t.dataset.i));
+  const more = $("more");
+  if(more) more.onclick = () => keys.forEach(k => fetchPage(k));
+}
+
+function selectCat(k){
+  state.cat = k; state.query = ""; $("search").value = "";
+  document.querySelectorAll(".chip").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === k));
+  if(k === "all"){ Object.keys(CATS).forEach(c => { if(!data[c].items.length) fetchPage(c); }); }
+  else if(!data[k].items.length) fetchPage(k);
+  render();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* Lightbox Modal */
+function showLB(){
+  const it = state.view[state.current];
+  if(!it) return;
+  const img = $("lbimg");
+  img.onerror = () => { img.onerror = () => { img.src = it.thumb; }; img.src = it.orig; };
+  img.src = it.big; img.alt = it.desc || it.title;
+  $("lbmeta").innerHTML = `
+    <h2>${esc(it.title)}</h2>
+    ${it.desc ? `<p>${esc(it.desc)}</p>` : ""}
+    <div>${esc(CATS[it.key].label)}${it.artist ? " · Photo: " + esc(it.artist) : ""}
+      ${it.license ? " · " + (it.licenseUrl ? `<a href="${esc(it.licenseUrl)}" target="_blank" rel="noopener">${esc(it.license)}</a>` : esc(it.license)) : ""}
+      · <a href="${esc(it.page)}" target="_blank" rel="noopener">View on Wikimedia Commons</a></div>
+    <div style="opacity:.6;margin-top:4px">${state.current+1} of ${state.view.length}</div>`;
+}
+function openLB(i){ state.current = i; showLB(); if(!$("lightbox").open) $("lightbox").showModal(); }
+function step(d){ const n = state.view.length; if(!n) return; state.current = (state.current + d + n) % n; showLB(); }
+$("prev").onclick = () => step(-1);
+$("next").onclick = () => step(1);
+$("close").onclick = () => $("lightbox").close();
+$("lightbox").addEventListener("click", e => { if(e.target === $("lightbox")) $("lightbox").close(); });
+$("lightbox").addEventListener("keydown", e => {
+  if(e.key === "ArrowLeft") step(-1);
+  if(e.key === "ArrowRight") step(1);
+});
+
+/* Theme Switcher */
+function setTheme(dark, save){
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  $("theme").setAttribute("aria-checked", String(dark));
+  if(save){ try{ localStorage.setItem("drone-theme", dark ? "dark" : "light"); }catch(e){} }
+}
+(function(){
+  let saved = null; try{ saved = localStorage.getItem("drone-theme"); }catch(e){}
+  setTheme(saved ? saved === "dark" : (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches), false);
+})();
+$("theme").onclick = () => setTheme($("theme").getAttribute("aria-checked") !== "true", true);
+
+/* Input Controls */
+$("search").addEventListener("input", e => { state.query = e.target.value; render(); });
+$("shuffle").onclick = () => { state.shuffled = true; render(); };
+
+renderChips();
+render();
+Object.keys(CATS).forEach((k,i) => setTimeout(() => fetchPage(k), i*200));
+</script>
+</body>
+</html>
